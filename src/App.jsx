@@ -509,23 +509,6 @@ export default function App() {
 }
 
 function SectionRow({ title: t, onMore, loading, children }) {
-  const rowRef = React.useRef(null)
-  const startX = React.useRef(0)
-  const scrollStart = React.useRef(0)
-  const isDragging = React.useRef(false)
-
-  const onTouchStart = (e) => {
-    startX.current = e.touches[0].clientX
-    scrollStart.current = rowRef.current.scrollLeft
-    isDragging.current = true
-  }
-  const onTouchMove = (e) => {
-    if (!isDragging.current) return
-    const dx = startX.current - e.touches[0].clientX
-    rowRef.current.scrollLeft = scrollStart.current + dx
-  }
-  const onTouchEnd = () => { isDragging.current = false }
-
   return (
     <div style={{marginBottom:40}}>
       <div className="section-header">
@@ -538,13 +521,7 @@ function SectionRow({ title: t, onMore, loading, children }) {
               <div key={i} className="skeleton" style={{width:158,height:260,flexShrink:0}} />
             ))}
           </div>
-        : <div
-            className="scroll-row"
-            ref={rowRef}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-          >{children}</div>
+        : <div className="scroll-row">{children}</div>
       }
     </div>
   )
