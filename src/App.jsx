@@ -515,14 +515,16 @@ function SectionRow({ title: t, onMore, loading, children }) {
         <span className="section-title">{t}</span>
         <button className="btn-more" onClick={onMore}>View All →</button>
       </div>
-      {loading
-        ? <div className="scroll-row">
-            {[...Array(6)].map((_,i) => (
-              <div key={i} className="skeleton" style={{width:158,height:260,flexShrink:0}} />
-            ))}
-          </div>
-        : <div className="scroll-row">{children}</div>
-      }
+      <div className="scroll-outer">
+        {loading
+          ? <div className="scroll-row">
+              {[...Array(6)].map((_,i) => (
+                <div key={i} className="skeleton" style={{width:158,height:260,flexShrink:0}} />
+              ))}
+            </div>
+          : <div className="scroll-row">{children}</div>
+        }
+      </div>
     </div>
   )
 }
@@ -530,7 +532,7 @@ function SectionRow({ title: t, onMore, loading, children }) {
 function MangaCard({ m, onOpen, onRead, onBm, bm }) {
   const cover = jCover(m)
   return (
-    <div className="card" onClick={() => onOpen(m)} >
+    <div className="card" onClick={() => onOpen(m)}>
       <div className="card-img-wrap">
         {cover
           ? <img src={cover} className="card-img" alt={jTitle(m)} loading="lazy" />
@@ -718,40 +720,5 @@ function Footer() {
         <span className="footer-credit">// crafted by spac3gh0st</span>
       </div>
     </footer>
-  )
-}
-
-/* ── Bottom Nav Bar ── */
-function BottomNav({ page, navigate, bookmarks, history, onRandom, randomLoading }) {
-  const items = [
-    { id: 'home',      icon: '⛩',  label: 'Home'    },
-    { id: 'popular',   icon: '🔥',  label: 'Popular' },
-    { id: 'genres',    icon: '⚡',  label: 'Genres'  },
-    { id: 'history',   icon: '📜',  label: 'History' },
-    { id: 'bookmarks', icon: '📌',  label: 'Saves'   },
-  ]
-  return (
-    <nav className="mobile-nav">
-      <div className="mobile-nav-inner">
-        {items.map(n => (
-          <button key={n.id}
-            className={`mobile-nav-btn${page === n.id ? ' active' : ''}`}
-            onClick={() => navigate(n.id)}>
-            <span className="nav-icon">{n.icon}</span>
-            <span>{n.label}</span>
-            {n.id === 'bookmarks' && bookmarks.length > 0 && (
-              <span className="mobile-nav-badge">{bookmarks.length}</span>
-            )}
-            {n.id === 'history' && history.length > 0 && (
-              <span className="mobile-nav-badge" style={{background:'var(--cyan)',color:'#000'}}>{history.length}</span>
-            )}
-          </button>
-        ))}
-        <button className="mobile-random-btn" onClick={onRandom} disabled={randomLoading}>
-          <span style={{fontSize:18}}>🎲</span>
-          <span>{randomLoading ? '...' : 'Random'}</span>
-        </button>
-      </div>
-    </nav>
   )
 }
