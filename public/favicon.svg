@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" fill="#7b2fbe" rx="8"/>
+  <rect x="2" y="2" width="60" height="60" fill="none" stroke="#000" stroke-width="3" rx="7"/>
+  <rect x="2" y="2" width="60" height="10" fill="#ffe940" rx="7"/>
+  <rect x="2" y="8" width="60" height="4" fill="#ffe940"/>
+  <text x="32" y="48" text-anchor="middle" font-family="serif" font-size="34" font-weight="900"
+    fill="#fff" stroke="#000" stroke-width="2.5" paint-order="stroke">鬼</text>
+</svg>
