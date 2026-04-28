@@ -646,7 +646,7 @@ function MobileNav({ page, navigate, bookmarks, history, onRandom, randomLoading
   return (
     <>
       {/* Backdrop */}
-      {open && <div className="fnav-backdrop" onClick={() => setOpen(false)} />}
+      <div className={`fnav-backdrop${open ? ' visible' : ''}`} onClick={() => setOpen(false)} />
       <div className="fnav-wrap">
         {/* Expanded menu */}
         {open && (
