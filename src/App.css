@@ -1102,3 +1102,34 @@ img { display: block; }
   .hero-title { font-size: 20px; }
   .manga-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
 }
+
+/* ── SCROLL ROW FINAL FIX ── */
+@media (max-width: 900px) {
+  /* The parent chain must NOT have overflow:hidden or overflow-x:hidden */
+  .app-shell { overflow: visible !important; }
+  .content-wrap { overflow: visible !important; }
+  .main { overflow: visible !important; overflow-y: visible !important; overflow-x: clip !important; }
+
+  /* Scroll row needs a block formatting context but must scroll */
+  .scroll-row {
+    overflow-x: scroll !important;
+    overflow-y: visible !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-snap-type: x mandatory !important;
+    /* Pull out to full width */
+    width: calc(100% + 28px) !important;
+    margin-left: -14px !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    box-sizing: border-box !important;
+  }
+  .scroll-row .card {
+    scroll-snap-align: start !important;
+    flex-shrink: 0 !important;
+    width: 72vw !important;
+    min-width: 72vw !important;
+    max-width: 300px !important;
+  }
+}
