@@ -1162,3 +1162,15 @@ img { display: block; }
 }
 .detail-read-btns .redirect-site-btn.secondary { background: var(--yellow); color: #000; }
 .detail-read-btns .redirect-site-btn.tertiary { background: var(--ink2); color: var(--cyan); border-color: rgba(0,245,212,0.3); }
+
+/* ── TOUCH SCROLL FIX ── */
+@media (max-width: 900px) {
+  .scroll-row {
+    touch-action: pan-x !important;
+    overscroll-behavior-x: contain !important;
+    will-change: scroll-position !important;
+  }
+  .scroll-row .card {
+    touch-action: pan-x !important;
+  }
+}
