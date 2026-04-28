@@ -22,7 +22,8 @@ const NAV = [
 
 const READ_SITES = [
   { name: 'MangaDex',    color: 'primary',   getUrl: (m) => `https://mangadex.org/search?q=${encodeURIComponent(jTitle(m))}` },
-  { name: 'MangaReader', color: 'secondary', getUrl: (m) => `https://mangareader.to/search?keyword=${encodeURIComponent(jTitle(m))}` },
+  { name: 'MangaKatana', color: 'secondary', getUrl: (m) => `https://mangakatana.com/?search=${encodeURIComponent(jTitle(m))}&search_by=book_name` },
+  { name: 'MangaReader', color: 'tertiary',  getUrl: (m) => `https://mangareader.to/search?keyword=${encodeURIComponent(jTitle(m))}` },
   { name: 'ComicK',      color: 'tertiary',  getUrl: (m) => `https://comick.io/search?q=${encodeURIComponent(jTitle(m))}` },
 ]
 
