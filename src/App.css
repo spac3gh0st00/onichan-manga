@@ -215,7 +215,6 @@ img { display: block; }
 /* ── MAIN ── */
 .main {
   flex: 1;
-  overflow: auto;
   padding: 24px 28px;
   position: relative;
   animation: slideIn 0.3s ease;
