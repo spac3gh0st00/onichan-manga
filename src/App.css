@@ -1065,3 +1065,18 @@ img { display: block; }
   .redirect-cover-wrap { width: 120px; }
   .redirect-site-btn { font-size: 11px; padding: 8px 12px; }
 }
+
+/* ══ FINAL MOBILE FIXES ══ */
+@media (max-width: 900px) {
+  /* Fix white space — content-wrap shouldn't force full height on mobile */
+  .content-wrap { min-height: unset; }
+
+  /* Fix scroll — main's overflow:auto was creating a scroll trap */
+  .main { overflow: visible !important; }
+
+  /* Now scroll-row can scroll horizontally freely */
+  .scroll-row {
+    overflow-x: scroll !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
