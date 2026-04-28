@@ -515,14 +515,16 @@ function SectionRow({ title: t, onMore, loading, children }) {
         <span className="section-title">{t}</span>
         <button className="btn-more" onClick={onMore}>View All →</button>
       </div>
-      {loading
-        ? <div className="scroll-row">
-            {[...Array(6)].map((_,i) => (
-              <div key={i} className="skeleton" style={{width:158,height:260,flexShrink:0}} />
-            ))}
-          </div>
-        : <div className="scroll-row">{children}</div>
-      }
+      <div className="scroll-outer">
+        {loading
+          ? <div className="scroll-row">
+              {[...Array(6)].map((_,i) => (
+                <div key={i} className="skeleton" style={{width:158,height:260,flexShrink:0}} />
+              ))}
+            </div>
+          : <div className="scroll-row">{children}</div>
+        }
+      </div>
     </div>
   )
 }

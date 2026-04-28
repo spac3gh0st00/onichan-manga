@@ -1035,3 +1035,43 @@ img { display: block; }
 @media (max-width: 380px) {
   .scroll-row .card { width: 82vw !important; min-width: 82vw !important; }
 }
+
+/* ── SCROLL OUTER WRAPPER ── */
+.scroll-outer {
+  /* Block element that establishes its own scroll context */
+  display: block;
+  width: 100%;
+  position: relative;
+}
+
+@media (max-width: 900px) {
+  .scroll-outer {
+    /* Extend beyond main padding to go edge to edge */
+    margin-left: -14px;
+    margin-right: -14px;
+    width: calc(100% + 28px);
+  }
+  .scroll-outer .scroll-row {
+    /* Reset margins since outer handles the edge bleed */
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    padding-left: 14px !important;
+    padding-right: 30px !important;
+    /* Pure block scrollable container */
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: scroll !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-x: contain !important;
+    scrollbar-width: none !important;
+  }
+  .scroll-outer .scroll-row::-webkit-scrollbar { display: none !important; }
+  .scroll-outer .scroll-row .card {
+    width: 72vw !important;
+    min-width: 72vw !important;
+    max-width: 300px !important;
+    flex-shrink: 0 !important;
+  }
+}
