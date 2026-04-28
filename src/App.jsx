@@ -510,6 +510,35 @@ export default function App() {
 
 function SectionRow({ title: t, onMore, loading, children }) {
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 900
+  const scrollRef = React.useRef(null)
+
+  React.useEffect(() => {
+    const el = scrollRef.current
+    if (!el || !isMobile) return
+    let startX = 0, startScrollLeft = 0, isDown = false
+
+    const onStart = (e) => {
+      isDown = true
+      startX = e.touches[0].pageX
+      startScrollLeft = el.scrollLeft
+    }
+    const onMove = (e) => {
+      if (!isDown) return
+      e.stopPropagation()
+      const dx = startX - e.touches[0].pageX
+      el.scrollLeft = startScrollLeft + dx
+    }
+    const onEnd = () => { isDown = false }
+
+    el.addEventListener('touchstart', onStart, { passive: true })
+    el.addEventListener('touchmove', onMove, { passive: false })
+    el.addEventListener('touchend', onEnd, { passive: true })
+    return () => {
+      el.removeEventListener('touchstart', onStart)
+      el.removeEventListener('touchmove', onMove)
+      el.removeEventListener('touchend', onEnd)
+    }
+  }, [isMobile])
 
   const rowStyle = isMobile ? {
     display: 'flex',
@@ -547,7 +576,7 @@ function SectionRow({ title: t, onMore, loading, children }) {
               <div key={i} className="skeleton" style={{width:158,height:260,flexShrink:0}} />
             ))}
           </div>
-        : <div className={isMobile ? '' : 'scroll-row'} style={isMobile ? {...rowStyle, touchAction:'pan-x'} : {}}>
+        : <div ref={scrollRef} className={isMobile ? '' : 'scroll-row'} style={isMobile ? {...rowStyle, touchAction:'pan-x'} : {}}>
             {React.Children.map(children, child =>
               child ? React.cloneElement(child, {
                 style: {...(child.props.style||{}), ...cardStyle, touchAction:'pan-x'}
