@@ -16,7 +16,14 @@ const NAV = [
   { id: 'popular',   icon: '🔥',  label: 'Popular'      },
   { id: 'new',       icon: '✦',   label: 'New Releases'  },
   { id: 'genres',    icon: '⚡',  label: 'Genres'       },
+  { id: 'history',   icon: '📜',  label: 'History'      },
   { id: 'bookmarks', icon: '📌',  label: 'Bookmarks'    },
+]
+
+const READ_SITES = [
+  { name: 'MangaDex',    color: 'primary',   getUrl: (m) => `https://mangadex.org/search?q=${encodeURIComponent(jTitle(m))}` },
+  { name: 'MangaReader', color: 'secondary', getUrl: (m) => `https://mangareader.to/search?keyword=${encodeURIComponent(jTitle(m))}` },
+  { name: 'ComicK',      color: 'tertiary',  getUrl: (m) => `https://comick.io/search?q=${encodeURIComponent(jTitle(m))}` },
 ]
 
 function jCover(m)  { return m?.images?.jpg?.large_image_url || m?.images?.jpg?.image_url || null }
@@ -26,12 +33,21 @@ function jTags(m)   { return m?.genres?.map(g => g.name) || [] }
 function jStatus(m) { return m?.status || '' }
 function jYear(m)   { return m?.published?.from ? new Date(m.published.from).getFullYear() : null }
 
+function timeAgo(ts) {
+  const diff = Date.now() - ts
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1)  return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24)  return `${hrs}h ago`
+  return `${Math.floor(hrs / 24)}d ago`
+}
+
 async function jikanFetch(path, params = {}) {
   const q = new URLSearchParams(params)
   const res = await fetch(`${JIKAN}${path}?${q}`)
   if (!res.ok) throw new Error(`Jikan ${res.status}`)
-  const json = await res.json()
-  return json.data || []
+  return (await res.json()).data || []
 }
 
 async function anilistFetch(query, variables = {}) {
@@ -40,8 +56,7 @@ async function anilistFetch(query, variables = {}) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, variables }),
   })
-  const json = await res.json()
-  return json.data
+  return (await res.json()).data
 }
 
 const AL_POPULAR = `query($page:Int){Page(page:$page,perPage:24){media(type:MANGA,sort:POPULARITY_DESC,isAdult:false){id title{english romaji}coverImage{large}description genres status startDate{year}siteUrl averageScore}}}`
@@ -50,11 +65,8 @@ const AL_GENRE   = `query($genre:String){Page(perPage:24){media(type:MANGA,genre
 
 function alNorm(m) {
   return {
-    _al: true,
-    al_id: m.id,
-    mal_id: null,
+    _al: true, al_id: m.id, mal_id: null,
     title: m.title?.english || m.title?.romaji || 'Unknown',
-    title_english: m.title?.english,
     images: { jpg: { large_image_url: m.coverImage?.large } },
     synopsis: m.description?.replace(/<[^>]+>/g, '') || '',
     genres: (m.genres || []).map(g => ({ name: g })),
@@ -65,46 +77,85 @@ function alNorm(m) {
   }
 }
 
+/* ── Redirect Page ── */
+function RedirectPage({ m, onCancel }) {
+  const cover = jCover(m)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      window.open(READ_SITES[0].getUrl(m), '_blank')
+      onCancel()
+    }, 3000)
+    return () => clearTimeout(t)
+  }, [m, onCancel])
+
+  return (
+    <div className="redirect-page">
+      <div className="redirect-bg" />
+      {cover && <div className="redirect-bg-cover" style={{backgroundImage:`url(${cover})`}} />}
+      <div className="redirect-content">
+        <span className="redirect-action-word">WHOOSH!</span>
+        {cover && (
+          <div className="redirect-cover-wrap">
+            <img src={cover} className="redirect-cover" alt="" />
+            <div className="redirect-cover-badge">Free Read</div>
+          </div>
+        )}
+        <div className="redirect-title">{jTitle(m)}</div>
+        <div className="redirect-subtitle">Opening your manga in 3 seconds...</div>
+        <div className="redirect-site-btns">
+          {READ_SITES.map(s => (
+            <a key={s.name} href={s.getUrl(m)} target="_blank" rel="noopener noreferrer"
+              className={`redirect-site-btn ${s.color}`}>{s.name} ↗</a>
+          ))}
+        </div>
+        <div className="redirect-bar-wrap"><div className="redirect-bar" /></div>
+        <button className="redirect-cancel" onClick={onCancel}>✕ Cancel</button>
+      </div>
+    </div>
+  )
+}
+
+/* ── Root App ── */
 export default function App() {
-  const [page,         setPage]         = useState('home')
-  const [popular,      setPopular]      = useState([])
-  const [newest,       setNewest]       = useState([])
-  const [loading,      setLoading]      = useState(true)
-  const [apiSource,    setApiSource]    = useState('')
-  const [search,       setSearch]       = useState('')
-  const [searchRes,    setSearchRes]    = useState([])
-  const [searching,    setSearching]    = useState(false)
-  const [selected,     setSelected]     = useState(null)
-  const [bookmarks,    setBookmarks]    = useState(() => {
+  const [page,          setPage]          = useState('home')
+  const [popular,       setPopular]       = useState([])
+  const [newest,        setNewest]        = useState([])
+  const [loading,       setLoading]       = useState(true)
+  const [apiSource,     setApiSource]     = useState('')
+  const [search,        setSearch]        = useState('')
+  const [searchRes,     setSearchRes]     = useState([])
+  const [searching,     setSearching]     = useState(false)
+  const [selected,      setSelected]      = useState(null)
+  const [redirect,      setRedirect]      = useState(null)
+  const [randomLoading, setRandomLoading] = useState(false)
+  const [bookmarks,     setBookmarks]     = useState(() => {
     try { return JSON.parse(localStorage.getItem('onichan_bm') || '[]') } catch { return [] }
   })
-  const [activeGenre,  setActiveGenre]  = useState(null)
-  const [genreData,    setGenreData]    = useState([])
-  const [genreLoading, setGenreLoading] = useState(false)
-  const [heroIdx,      setHeroIdx]      = useState(0)
-  const [error,        setError]        = useState(null)
+  const [history,       setHistory]       = useState(() => {
+    try { return JSON.parse(localStorage.getItem('onichan_history') || '[]') } catch { return [] }
+  })
+  const [activeGenre,   setActiveGenre]   = useState(null)
+  const [genreData,     setGenreData]     = useState([])
+  const [genreLoading,  setGenreLoading]  = useState(false)
+  const [heroIdx,       setHeroIdx]       = useState(0)
+  const [error,         setError]         = useState(null)
   const searchTimer = useRef(null)
   const featured = popular.slice(0, 5)
 
   useEffect(() => { loadHome() }, [])
 
   async function loadHome() {
-    setLoading(true)
-    setError(null)
+    setLoading(true); setError(null)
     try {
       const [pop, neu] = await Promise.all([
         jikanFetch('/top/manga', { type: 'manga', filter: 'bypopularity', limit: 24 }),
         jikanFetch('/manga', { order_by: 'start_date', sort: 'desc', status: 'publishing', limit: 24 }),
       ])
       if (pop.length > 0) {
-        setPopular(pop)
-        setNewest(neu)
-        setApiSource('MyAnimeList')
-        setLoading(false)
-        return
+        setPopular(pop); setNewest(neu); setApiSource('MyAnimeList')
+        setLoading(false); return
       }
-    } catch (e) { console.warn('Jikan failed, trying AniList...', e) }
-
+    } catch (e) { console.warn('Jikan failed', e) }
     try {
       const [p1, p2] = await Promise.all([
         anilistFetch(AL_POPULAR, { page: 1 }),
@@ -113,9 +164,7 @@ export default function App() {
       setPopular((p1?.Page?.media || []).map(alNorm))
       setNewest((p2?.Page?.media || []).map(alNorm))
       setApiSource('AniList')
-    } catch (e) {
-      setError('Could not load manga. Check your connection and retry.')
-    }
+    } catch { setError('Could not load manga. Check your connection and retry.') }
     setLoading(false)
   }
 
@@ -124,10 +173,33 @@ export default function App() {
   }, [bookmarks])
 
   useEffect(() => {
+    try { localStorage.setItem('onichan_history', JSON.stringify(history)) } catch {}
+  }, [history])
+
+  useEffect(() => {
     if (featured.length < 2) return
     const t = setInterval(() => setHeroIdx(i => (i + 1) % featured.length), 6000)
     return () => clearInterval(t)
   }, [featured.length])
+
+  const openManga = useCallback((m) => {
+    setSelected(m)
+    setHistory(prev => {
+      const id = m.mal_id || m.al_id
+      const filtered = prev.filter(h => (h.mal_id || h.al_id) !== id)
+      return [{ ...m, _visitedAt: Date.now() }, ...filtered].slice(0, 50)
+    })
+  }, [])
+
+  const loadRandom = useCallback(async () => {
+    setRandomLoading(true)
+    try {
+      const pg = Math.floor(Math.random() * 50) + 1
+      const res = await jikanFetch('/top/manga', { type: 'manga', page: pg, limit: 25 })
+      if (res.length > 0) openManga(res[Math.floor(Math.random() * res.length)])
+    } catch {}
+    setRandomLoading(false)
+  }, [openManga])
 
   const handleSearch = useCallback((val) => {
     setSearch(val)
@@ -148,9 +220,7 @@ export default function App() {
   }, [])
 
   const loadGenre = useCallback(async (genre) => {
-    setActiveGenre(genre)
-    setGenreLoading(true)
-    setGenreData([])
+    setActiveGenre(genre); setGenreLoading(true); setGenreData([])
     try {
       const id = GENRE_MAP[genre]
       if (id) {
@@ -185,6 +255,8 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      {redirect && <RedirectPage m={redirect} onCancel={() => setRedirect(null)} />}
+
       <div className="action-word action-tl">POW!</div>
       <div className="action-word action-br">SLASH!</div>
       <div className="action-word action-tr">ZAP!</div>
@@ -204,17 +276,22 @@ export default function App() {
               {n.id === 'bookmarks' && bookmarks.length > 0 && (
                 <span className="nav-badge">{bookmarks.length}</span>
               )}
+              {n.id === 'history' && history.length > 0 && (
+                <span className="nav-badge" style={{background:'var(--cyan)',color:'#000'}}>{history.length}</span>
+              )}
             </button>
           ))}
         </div>
+        <button className="random-btn" onClick={loadRandom} disabled={randomLoading}>
+          {randomLoading ? '◌ Loading...' : '🎲 Random Manga'}
+        </button>
         <div className="sidebar-footer">
-          <div>onichan-squad.com · v1.0</div>
+          <div>onichan-squad.com · v2.0</div>
           {apiSource && <div style={{fontSize:9,opacity:0.5,marginTop:4}}>via {apiSource}</div>}
         </div>
       </nav>
 
       <main className="main">
-        {/* Search */}
         <div className="search-wrap">
           <div className="search-box">
             <span className="search-icon">⌕</span>
@@ -228,7 +305,7 @@ export default function App() {
                 ? <div className="search-empty">No results for "{search}"</div>
                 : searchRes.map((m, i) => (
                     <div key={m.mal_id || m.al_id || i} className="search-result"
-                      onClick={() => { setSelected(m); setSearch(''); setSearchRes([]) }}>
+                      onClick={() => { openManga(m); setSearch(''); setSearchRes([]) }}>
                       {jCover(m) && <img src={jCover(m)} className="search-thumb" alt="" />}
                       <div>
                         <div className="search-name">{jTitle(m)}</div>
@@ -241,12 +318,9 @@ export default function App() {
           )}
         </div>
 
-        {/* Error */}
         {error && (
           <div className="empty-state">
-            <span className="empty-icon">⚠️</span>
-            {error}
-            <br />
+            <span className="empty-icon">⚠️</span>{error}<br />
             <button className="btn-primary" style={{marginTop:16}} onClick={loadHome}>Retry</button>
           </div>
         )}
@@ -268,10 +342,8 @@ export default function App() {
                     {jTags(hero).slice(0,5).map(t => <span key={t} className="tag">{t}</span>)}
                   </div>
                   <div className="hero-actions">
-                    <button className="btn-primary" onClick={() => setSelected(hero)}>📖 Read Now</button>
-                    <button className="btn-secondary" onClick={() => toggleBookmark(hero)}>
-                      {isBm(hero) ? '✓ Saved' : '+ Bookmark'}
-                    </button>
+                    <button className="btn-primary" onClick={() => openManga(hero)}>📖 View Details</button>
+                    <button className="btn-secondary" onClick={() => setRedirect(hero)}>🚀 Read Free</button>
                   </div>
                 </div>
                 {jCover(hero) && (
@@ -290,13 +362,13 @@ export default function App() {
 
             <SectionRow title="🔥 Popular Now" onMore={() => navigate('popular')} loading={loading}>
               {popular.slice(0,8).map((m,i) => (
-                <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={setSelected} onBm={toggleBookmark} bm={isBm(m)} />
+                <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={openManga} onRead={setRedirect} onBm={toggleBookmark} bm={isBm(m)} />
               ))}
             </SectionRow>
 
             <SectionRow title="✦ New Releases" onMore={() => navigate('new')} loading={loading}>
               {newest.slice(0,8).map((m,i) => (
-                <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={setSelected} onBm={toggleBookmark} bm={isBm(m)} />
+                <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={openManga} onRead={setRedirect} onBm={toggleBookmark} bm={isBm(m)} />
               ))}
             </SectionRow>
 
@@ -322,7 +394,7 @@ export default function App() {
             {loading ? <SkeletonGrid /> : (
               <div className="manga-grid">
                 {pageData.map((m,i) => (
-                  <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={setSelected} onBm={toggleBookmark} bm={isBm(m)} />
+                  <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={openManga} onRead={setRedirect} onBm={toggleBookmark} bm={isBm(m)} />
                 ))}
               </div>
             )}
@@ -343,16 +415,42 @@ export default function App() {
             {!genreLoading && genreData.length > 0 && (
               <div className="manga-grid">
                 {genreData.map((m,i) => (
-                  <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={setSelected} onBm={toggleBookmark} bm={isBm(m)} />
+                  <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={openManga} onRead={setRedirect} onBm={toggleBookmark} bm={isBm(m)} />
                 ))}
               </div>
             )}
             {!activeGenre && (
               <div className="empty-state">
-                <span className="empty-icon">⚡</span>
-                Select a genre to explore
+                <span className="empty-icon">⚡</span>Select a genre to explore
               </div>
             )}
+          </>
+        )}
+
+        {/* HISTORY */}
+        {page === 'history' && !selected && (
+          <>
+            <h2 className="page-title">📜 Reading History</h2>
+            {history.length === 0
+              ? <div className="history-empty">
+                  <span className="empty-icon">📜</span>No history yet — start reading!
+                </div>
+              : <>
+                  <button className="history-clear-btn" onClick={() => setHistory([])}>
+                    🗑 Clear History
+                  </button>
+                  {history.map((m, i) => (
+                    <div key={m.mal_id||m.al_id||i} className="history-item" onClick={() => openManga(m)}>
+                      {jCover(m) && <img src={jCover(m)} className="history-thumb" alt="" />}
+                      <div className="history-info">
+                        <div className="history-title">{jTitle(m)}</div>
+                        <div className="history-meta">{jTags(m).slice(0,3).join(' · ')}</div>
+                      </div>
+                      <div className="history-time">{timeAgo(m._visitedAt)}</div>
+                    </div>
+                  ))}
+                </>
+            }
           </>
         )}
 
@@ -362,12 +460,11 @@ export default function App() {
             <h2 className="page-title">📌 Bookmarks</h2>
             {bookmarks.length === 0
               ? <div className="empty-state">
-                  <span className="empty-icon">📚</span>
-                  No bookmarks yet — go find something epic!
+                  <span className="empty-icon">📚</span>No bookmarks yet — go find something epic!
                 </div>
               : <div className="manga-grid">
                   {bookmarks.map((m,i) => (
-                    <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={setSelected} onBm={toggleBookmark} bm={true} />
+                    <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={openManga} onRead={setRedirect} onBm={toggleBookmark} bm={true} />
                   ))}
                 </div>
             }
@@ -376,7 +473,8 @@ export default function App() {
 
         {/* DETAIL */}
         {selected && (
-          <DetailView m={selected} onClose={() => setSelected(null)} onBm={toggleBookmark} bm={isBm(selected)} />
+          <DetailView m={selected} onClose={() => setSelected(null)}
+            onBm={toggleBookmark} bm={isBm(selected)} onRead={setRedirect} />
         )}
       </main>
     </div>
@@ -402,7 +500,7 @@ function SectionRow({ title: t, onMore, loading, children }) {
   )
 }
 
-function MangaCard({ m, onOpen, onBm, bm }) {
+function MangaCard({ m, onOpen, onRead, onBm, bm }) {
   const cover = jCover(m)
   return (
     <div className="card" onClick={() => onOpen(m)}>
@@ -412,7 +510,9 @@ function MangaCard({ m, onOpen, onBm, bm }) {
           : <div className="card-img-placeholder">📖</div>
         }
         <div className="card-overlay">
-          <button className="card-read-btn" onClick={e => { e.stopPropagation(); onOpen(m) }}>Read</button>
+          <button className="card-read-btn" onClick={e => { e.stopPropagation(); onRead(m) }}>
+            🚀 Read Free
+          </button>
           <button className="card-bm-btn" onClick={e => { e.stopPropagation(); onBm(m) }}>
             {bm ? '✓ Saved' : '+ Save'}
           </button>
@@ -432,7 +532,7 @@ function MangaCard({ m, onOpen, onBm, bm }) {
   )
 }
 
-function DetailView({ m, onClose, onBm, bm }) {
+function DetailView({ m, onClose, onBm, bm, onRead }) {
   const cover  = jCover(m)
   const tTitle = jTitle(m)
   const malUrl = m.mal_id ? `https://myanimelist.net/manga/${m.mal_id}` : null
@@ -450,10 +550,9 @@ function DetailView({ m, onClose, onBm, bm }) {
             {m.score    && <div className="meta-row"><span className="meta-label">Score</span><span className="meta-val">⭐ {m.score}</span></div>}
           </div>
           <div style={{marginTop:18,display:'flex',flexDirection:'column',gap:10}}>
-            {malUrl && (
-              <button className="btn-primary" style={{width:'100%'}}
-                onClick={() => window.open(malUrl, '_blank')}>📖 Read on MAL</button>
-            )}
+            <button className="btn-primary" style={{width:'100%'}} onClick={() => onRead(m)}>
+              🚀 Read Free
+            </button>
             <button className="btn-secondary" style={{width:'100%'}} onClick={() => onBm(m)}>
               {bm ? '✓ Bookmarked' : '+ Bookmark'}
             </button>
@@ -465,12 +564,20 @@ function DetailView({ m, onClose, onBm, bm }) {
             {jTags(m).slice(0,6).map(t => <span key={t} className="tag">{t}</span>)}
           </div>
           <p className="detail-desc">{jDesc(m)}</p>
-          <div className="detail-links">
+          <div style={{marginTop:20}}>
+            <div style={{fontFamily:'var(--font-comic)',fontSize:13,letterSpacing:2,
+              color:'var(--cyan)',marginBottom:10}}>📖 READ ON:</div>
+            <div className="redirect-site-btns" style={{justifyContent:'flex-start'}}>
+              {READ_SITES.map(s => (
+                <a key={s.name} href={s.getUrl(m)} target="_blank" rel="noopener noreferrer"
+                  className={`redirect-site-btn ${s.color}`}>{s.name} ↗</a>
+              ))}
+            </div>
+          </div>
+          <div className="detail-links" style={{marginTop:16}}>
             {malUrl && <a href={malUrl} target="_blank" rel="noopener noreferrer" className="ext-link">MyAnimeList ↗</a>}
             {alUrl  && <a href={alUrl}  target="_blank" rel="noopener noreferrer" className="ext-link">AniList ↗</a>}
-            <a href={`https://mangadex.org/search?q=${encodeURIComponent(tTitle)}`}
-              target="_blank" rel="noopener noreferrer" className="ext-link">MangaDex ↗</a>
-            <a href={`https://www.google.com/search?q=${encodeURIComponent(tTitle+' manga read')}`}
+            <a href={`https://www.google.com/search?q=${encodeURIComponent(tTitle+' manga read online free')}`}
               target="_blank" rel="noopener noreferrer" className="ext-link">Google ↗</a>
           </div>
         </div>
