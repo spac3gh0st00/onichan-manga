@@ -1416,3 +1416,21 @@ img { display: block; }
   .redirect-site-btns { gap: 8px; }
   .redirect-site-btn { font-size: 12px; padding: 8px 14px; }
 }
+
+/* ── MOBILE CARD/SCROLL FIX ── */
+@media (max-width: 900px) {
+  .scroll-row {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 12px;
+  }
+  .scroll-row .card {
+    width: 158px !important;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+  .manga-grid {
+    grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)) !important;
+  }
+}
