@@ -509,22 +509,52 @@ export default function App() {
 }
 
 function SectionRow({ title: t, onMore, loading, children }) {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 900
+
+  const rowStyle = isMobile ? {
+    display: 'flex',
+    flexWrap: 'nowrap',
+    overflowX: 'scroll',
+    overflowY: 'hidden',
+    WebkitOverflowScrolling: 'touch',
+    gap: '14px',
+    paddingBottom: '14px',
+    paddingLeft: '14px',
+    paddingRight: '30px',
+    marginLeft: '-14px',
+    marginRight: '-14px',
+    width: 'calc(100% + 28px)',
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none',
+    boxSizing: 'border-box',
+  } : {}
+
+  const cardStyle = isMobile ? {
+    minWidth: '72vw',
+    maxWidth: '300px',
+    flexShrink: 0,
+  } : {}
+
   return (
     <div style={{marginBottom:40}}>
       <div className="section-header">
         <span className="section-title">{t}</span>
         <button className="btn-more" onClick={onMore}>View All →</button>
       </div>
-      <div className="scroll-outer">
-        {loading
-          ? <div className="scroll-row">
-              {[...Array(6)].map((_,i) => (
-                <div key={i} className="skeleton" style={{width:158,height:260,flexShrink:0}} />
-              ))}
-            </div>
-          : <div className="scroll-row">{children}</div>
-        }
-      </div>
+      {loading
+        ? <div className="scroll-row">
+            {[...Array(6)].map((_,i) => (
+              <div key={i} className="skeleton" style={{width:158,height:260,flexShrink:0}} />
+            ))}
+          </div>
+        : <div className={isMobile ? '' : 'scroll-row'} style={isMobile ? rowStyle : {}}>
+            {React.Children.map(children, child =>
+              child ? React.cloneElement(child, {
+                style: {...(child.props.style||{}), ...cardStyle}
+              }) : null
+            )}
+          </div>
+      }
     </div>
   )
 }
