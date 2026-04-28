@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 
 const JIKAN   = 'https://api.jikan.moe/v4'
 const ANILIST = 'https://graphql.anilist.co'
@@ -630,37 +630,53 @@ function SkeletonGrid() {
   )
 }
 
-/* ── Mobile Nav ── */
+/* ── Mobile Floating Nav ── */
 function MobileNav({ page, navigate, bookmarks, history, onRandom, randomLoading }) {
+  const [open, setOpen] = React.useState(false)
   const items = [
     { id: 'home',      icon: '⛩',  label: 'Home'    },
     { id: 'popular',   icon: '🔥',  label: 'Popular' },
+    { id: 'new',       icon: '✦',   label: 'New'     },
     { id: 'genres',    icon: '⚡',  label: 'Genres'  },
     { id: 'history',   icon: '📜',  label: 'History' },
     { id: 'bookmarks', icon: '📌',  label: 'Saves'   },
   ]
+  const handleNav = (id) => { navigate(id); setOpen(false) }
+  const handleRandom = () => { onRandom(); setOpen(false) }
   return (
-    <nav className="mobile-nav">
-      <div className="mobile-nav-inner">
-        {items.map(n => (
-          <button key={n.id} className={`mobile-nav-btn${page === n.id ? ' active' : ''}`}
-            onClick={() => navigate(n.id)}>
-            <span className="nav-icon">{n.icon}</span>
-            <span>{n.label}</span>
-            {n.id === 'bookmarks' && bookmarks.length > 0 && (
-              <span className="mobile-nav-badge">{bookmarks.length}</span>
-            )}
-            {n.id === 'history' && history.length > 0 && (
-              <span className="mobile-nav-badge" style={{background:'var(--cyan)',color:'#000'}}>{history.length}</span>
-            )}
-          </button>
-        ))}
-        <button className="mobile-random-btn" onClick={onRandom} disabled={randomLoading}>
-          <span style={{fontSize:20}}>🎲</span>
-          <span>{randomLoading ? '...' : 'Random'}</span>
+    <>
+      {/* Backdrop */}
+      {open && <div className="fnav-backdrop" onClick={() => setOpen(false)} />}
+      <div className="fnav-wrap">
+        {/* Expanded menu */}
+        {open && (
+          <div className="fnav-menu">
+            {items.map(n => (
+              <button key={n.id}
+                className={`fnav-item${page === n.id ? ' active' : ''}`}
+                onClick={() => handleNav(n.id)}>
+                <span className="fnav-icon">{n.icon}</span>
+                <span className="fnav-label">{n.label}</span>
+                {n.id === 'bookmarks' && bookmarks.length > 0 && (
+                  <span className="fnav-badge">{bookmarks.length}</span>
+                )}
+                {n.id === 'history' && history.length > 0 && (
+                  <span className="fnav-badge" style={{background:'var(--cyan)',color:'#000'}}>{history.length}</span>
+                )}
+              </button>
+            ))}
+            <button className="fnav-item fnav-random" onClick={handleRandom} disabled={randomLoading}>
+              <span className="fnav-icon">🎲</span>
+              <span className="fnav-label">{randomLoading ? 'Loading...' : 'Random'}</span>
+            </button>
+          </div>
+        )}
+        {/* FAB trigger */}
+        <button className={`fnav-fab${open ? ' open' : ''}`} onClick={() => setOpen(o => !o)}>
+          {open ? '✕' : '鬼'}
         </button>
       </div>
-    </nav>
+    </>
   )
 }
 
