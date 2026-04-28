@@ -83,7 +83,7 @@ Every manga you view gets logged with a timestamp. Check your history anytime. C
 │   API (fallback) │  AniList GraphQL                     │
 │   HOSTING     │  GitHub Pages                            │
 │   CI/CD       │  GitHub Actions — auto deploy on push    │
-│   DOMAIN      │  Squarespace DNS → manga.onichan-squad.com│
+│   DOMAIN      │  Custom subdomain via CNAME              │
 │   PERSISTENCE │  localStorage (bookmarks + history)      │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -168,11 +168,11 @@ Manual trigger available via **Actions → Deploy to GitHub Pages → Run workfl
 
 ## 🗡️ ARC 8 — DNS CONFIGURATION
 
-For the `manga.onichan-squad.com` subdomain (Squarespace DNS):
+Add a single CNAME record at your DNS provider pointing your subdomain to GitHub Pages:
 
 | Type | Name | Value |
 |------|------|-------|
-| CNAME | manga | `spac3gh0st00.github.io` |
+| CNAME | manga | `YOUR-USERNAME.github.io` |
 
 ---
 
@@ -203,7 +203,6 @@ OniChan Squad redirects to these free manga reading platforms:
   ╔══════════════════════════════════════╗
   ║                                      ║
   ║   Built by  spac3gh0st00             ║
-  ║   Domain    onichan-squad.com        ║
   ║   Version   v2.0                     ║
   ║   License   MIT                      ║
   ║                                      ║
