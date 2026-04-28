@@ -547,10 +547,10 @@ function SectionRow({ title: t, onMore, loading, children }) {
               <div key={i} className="skeleton" style={{width:158,height:260,flexShrink:0}} />
             ))}
           </div>
-        : <div className={isMobile ? '' : 'scroll-row'} style={isMobile ? rowStyle : {}}>
+        : <div className={isMobile ? '' : 'scroll-row'} style={isMobile ? {...rowStyle, touchAction:'pan-x'} : {}}>
             {React.Children.map(children, child =>
               child ? React.cloneElement(child, {
-                style: {...(child.props.style||{}), ...cardStyle}
+                style: {...(child.props.style||{}), ...cardStyle, touchAction:'pan-x'}
               }) : null
             )}
           </div>
@@ -562,7 +562,7 @@ function SectionRow({ title: t, onMore, loading, children }) {
 function MangaCard({ m, onOpen, onRead, onBm, bm }) {
   const cover = jCover(m)
   return (
-    <div className="card" onClick={() => onOpen(m)}>
+    <div className="card" onClick={() => onOpen(m)} style={{touchAction:'pan-y', userSelect:'none'}}>
       <div className="card-img-wrap">
         {cover
           ? <img src={cover} className="card-img" alt={jTitle(m)} loading="lazy" />
