@@ -509,61 +509,6 @@ export default function App() {
 }
 
 function SectionRow({ title: t, onMore, loading, children }) {
-  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 900
-  const scrollRef = React.useRef(null)
-
-  React.useEffect(() => {
-    const el = scrollRef.current
-    if (!el || !isMobile) return
-    let startX = 0, startScrollLeft = 0, isDown = false
-
-    const onStart = (e) => {
-      isDown = true
-      startX = e.touches[0].pageX
-      startScrollLeft = el.scrollLeft
-    }
-    const onMove = (e) => {
-      if (!isDown) return
-      e.stopPropagation()
-      const dx = startX - e.touches[0].pageX
-      el.scrollLeft = startScrollLeft + dx
-    }
-    const onEnd = () => { isDown = false }
-
-    el.addEventListener('touchstart', onStart, { passive: true })
-    el.addEventListener('touchmove', onMove, { passive: false })
-    el.addEventListener('touchend', onEnd, { passive: true })
-    return () => {
-      el.removeEventListener('touchstart', onStart)
-      el.removeEventListener('touchmove', onMove)
-      el.removeEventListener('touchend', onEnd)
-    }
-  }, [isMobile])
-
-  const rowStyle = isMobile ? {
-    display: 'flex',
-    flexWrap: 'nowrap',
-    overflowX: 'scroll',
-    overflowY: 'hidden',
-    WebkitOverflowScrolling: 'touch',
-    gap: '14px',
-    paddingBottom: '14px',
-    paddingLeft: '14px',
-    paddingRight: '30px',
-    marginLeft: '-14px',
-    marginRight: '-14px',
-    width: 'calc(100% + 28px)',
-    scrollbarWidth: 'none',
-    msOverflowStyle: 'none',
-    boxSizing: 'border-box',
-  } : {}
-
-  const cardStyle = isMobile ? {
-    minWidth: '72vw',
-    maxWidth: '300px',
-    flexShrink: 0,
-  } : {}
-
   return (
     <div style={{marginBottom:40}}>
       <div className="section-header">
@@ -576,13 +521,7 @@ function SectionRow({ title: t, onMore, loading, children }) {
               <div key={i} className="skeleton" style={{width:158,height:260,flexShrink:0}} />
             ))}
           </div>
-        : <div ref={scrollRef} className={isMobile ? '' : 'scroll-row'} style={isMobile ? {...rowStyle, touchAction:'pan-x'} : {}}>
-            {React.Children.map(children, child =>
-              child ? React.cloneElement(child, {
-                style: {...(child.props.style||{}), ...cardStyle, touchAction:'pan-x'}
-              }) : null
-            )}
-          </div>
+        : <div className="scroll-row">{children}</div>
       }
     </div>
   )
@@ -591,7 +530,7 @@ function SectionRow({ title: t, onMore, loading, children }) {
 function MangaCard({ m, onOpen, onRead, onBm, bm }) {
   const cover = jCover(m)
   return (
-    <div className="card" onClick={() => onOpen(m)} style={{touchAction:'pan-y', userSelect:'none'}}>
+    <div className="card" onClick={() => onOpen(m)} >
       <div className="card-img-wrap">
         {cover
           ? <img src={cover} className="card-img" alt={jTitle(m)} loading="lazy" />
@@ -779,5 +718,40 @@ function Footer() {
         <span className="footer-credit">// crafted by spac3gh0st</span>
       </div>
     </footer>
+  )
+}
+
+/* ── Bottom Nav Bar ── */
+function BottomNav({ page, navigate, bookmarks, history, onRandom, randomLoading }) {
+  const items = [
+    { id: 'home',      icon: '⛩',  label: 'Home'    },
+    { id: 'popular',   icon: '🔥',  label: 'Popular' },
+    { id: 'genres',    icon: '⚡',  label: 'Genres'  },
+    { id: 'history',   icon: '📜',  label: 'History' },
+    { id: 'bookmarks', icon: '📌',  label: 'Saves'   },
+  ]
+  return (
+    <nav className="mobile-nav">
+      <div className="mobile-nav-inner">
+        {items.map(n => (
+          <button key={n.id}
+            className={`mobile-nav-btn${page === n.id ? ' active' : ''}`}
+            onClick={() => navigate(n.id)}>
+            <span className="nav-icon">{n.icon}</span>
+            <span>{n.label}</span>
+            {n.id === 'bookmarks' && bookmarks.length > 0 && (
+              <span className="mobile-nav-badge">{bookmarks.length}</span>
+            )}
+            {n.id === 'history' && history.length > 0 && (
+              <span className="mobile-nav-badge" style={{background:'var(--cyan)',color:'#000'}}>{history.length}</span>
+            )}
+          </button>
+        ))}
+        <button className="mobile-random-btn" onClick={onRandom} disabled={randomLoading}>
+          <span style={{fontSize:18}}>🎲</span>
+          <span>{randomLoading ? '...' : 'Random'}</span>
+        </button>
+      </div>
+    </nav>
   )
 }

@@ -1080,3 +1080,78 @@ img { display: block; }
     -webkit-overflow-scrolling: touch !important;
   }
 }
+
+/* ══ BOTTOM NAV BAR (replaces floating button) ══ */
+@media (max-width: 900px) {
+  .fnav-wrap { display: none !important; }
+  .fnav-backdrop { display: none !important; }
+
+  .mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 64px;
+    background: var(--ink2);
+    border-top: var(--stroke);
+    z-index: 100;
+    padding: 0 4px;
+  }
+  .mobile-nav-inner {
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+    width: 100%;
+  }
+  .mobile-nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    border-top: 2px solid transparent;
+    color: rgba(220,200,255,0.5);
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.15s;
+    padding: 4px 2px;
+  }
+  .mobile-nav-btn.active { color: var(--purple); border-top-color: var(--purple); }
+  .mobile-nav-btn .nav-icon { font-size: 18px; width: auto; }
+  .mobile-nav-badge {
+    position: absolute; top: 4px; right: 6px;
+    background: var(--yellow); color: #000;
+    border-radius: 8px; font-size: 8px;
+    padding: 0 4px; font-weight: 900;
+    border: 1px solid #000; min-width: 14px; text-align: center;
+  }
+  .mobile-random-btn {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 3px;
+    background: var(--yellow);
+    border: none; border-top: var(--stroke);
+    color: #000;
+    font-family: var(--font-body);
+    font-size: 9px; font-weight: 900;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    cursor: pointer; padding: 4px 2px;
+  }
+  /* Push main content above nav bar */
+  .main { padding-bottom: 80px !important; }
+}
+
+/* ══ KEEP FLOATING NAV, REMOVE BOTTOM BAR ══ */
+@media (max-width: 900px) {
+  .fnav-wrap { display: flex !important; }
+  .mobile-nav { display: none !important; }
+  .main { padding-bottom: 40px !important; }
+}
