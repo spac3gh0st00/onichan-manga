@@ -592,19 +592,21 @@ function DetailView({ m, onClose, onBm, bm, onRead }) {
           </div>
           <p className="detail-desc">{jDesc(m)}</p>
           <div style={{marginTop:20}}>
-            <div style={{fontFamily:'var(--font-comic)',fontSize:13,letterSpacing:2,
-              color:'var(--cyan)',marginBottom:10}}>📖 READ ON:</div>
-            <div className="redirect-site-btns" style={{justifyContent:'flex-start'}}>
+            <div className="read-site-label">⭐ Free &amp; Fast</div>
+            <div className="detail-read-btns">
               {READ_SITES.filter(s => s.free).map(s => (
-                <div key={s.name} className="redirect-site-btn-wrap" style={{display:'inline-block'}}>
+                <div key={s.name} className="redirect-site-btn-wrap">
                   <div className="free-badge">FREE</div>
                   <a href={s.getUrl(m)} target="_blank" rel="noopener noreferrer"
-                    className={`redirect-site-btn ${s.color}`}>{s.name} ↗</a>
+                    className="redirect-site-btn secondary">{s.name} ↗</a>
                 </div>
               ))}
+            </div>
+            <div className="read-site-label" style={{marginTop:14}}>Also Available</div>
+            <div className="detail-read-btns">
               {READ_SITES.filter(s => !s.free).map(s => (
                 <a key={s.name} href={s.getUrl(m)} target="_blank" rel="noopener noreferrer"
-                  className={`redirect-site-btn ${s.color}`}>{s.name} ↗</a>
+                  className="redirect-site-btn tertiary">{s.name} ↗</a>
               ))}
             </div>
           </div>

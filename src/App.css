@@ -1133,3 +1133,32 @@ img { display: block; }
     max-width: 300px !important;
   }
 }
+
+/* ── DETAIL READ BUTTONS ── */
+.detail-read-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.detail-read-btns .redirect-site-btn-wrap { position: relative; }
+.detail-read-btns .redirect-site-btn {
+  display: inline-block;
+  font-family: var(--font-comic);
+  font-size: 13px;
+  letter-spacing: 2px;
+  padding: 10px 18px;
+  border: var(--stroke);
+  box-shadow: var(--shadow-comic);
+  border-radius: 2px;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: transform 0.1s, box-shadow 0.1s;
+  margin-top: 8px;
+}
+.detail-read-btns .redirect-site-btn:hover {
+  transform: translate(-2px,-2px);
+  box-shadow: var(--shadow-lg);
+}
+.detail-read-btns .redirect-site-btn.secondary { background: var(--yellow); color: #000; }
+.detail-read-btns .redirect-site-btn.tertiary { background: var(--ink2); color: var(--cyan); border-color: rgba(0,245,212,0.3); }
