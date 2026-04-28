@@ -21,6 +21,8 @@ const NAV = [
 ]
 
 const READ_SITES = [
+  { name: 'WeebCentral', color: 'secondary', free: true,  getUrl: (m) => `https://weebcentral.com/search/?text=${encodeURIComponent(jTitle(m))}&sort=Best+Match` },
+  { name: 'MangaKatana', color: 'secondary', free: true,  getUrl: (m) => `https://mangakatana.com/?search=${encodeURIComponent(jTitle(m))}&search_by=book_name` },
   { name: 'MangaDex',    color: 'primary',   getUrl: (m) => `https://mangadex.org/search?q=${encodeURIComponent(jTitle(m))}` },
   { name: 'MangaKatana', color: 'secondary', getUrl: (m) => `https://mangakatana.com/?search=${encodeURIComponent(jTitle(m))}&search_by=book_name` },
   { name: 'MangaReader', color: 'tertiary',  getUrl: (m) => `https://mangareader.to/search?keyword=${encodeURIComponent(jTitle(m))}` },
@@ -103,11 +105,24 @@ function RedirectPage({ m, onCancel }) {
         )}
         <div className="redirect-title">{jTitle(m)}</div>
         <div className="redirect-subtitle">Opening your manga in 3 seconds...</div>
-        <div className="redirect-site-btns">
-          {READ_SITES.map(s => (
-            <a key={s.name} href={s.getUrl(m)} target="_blank" rel="noopener noreferrer"
-              className={`redirect-site-btn ${s.color}`}>{s.name} ↗</a>
-          ))}
+        <div>
+          <div className="read-site-label">⭐ Free &amp; Fast</div>
+          <div className="redirect-site-btns">
+            {READ_SITES.filter(s => s.free).map(s => (
+              <div key={s.name} className="redirect-site-btn-wrap">
+                <div className="free-badge">FREE</div>
+                <a href={s.getUrl(m)} target="_blank" rel="noopener noreferrer"
+                  className={`redirect-site-btn ${s.color}`}>{s.name} ↗</a>
+              </div>
+            ))}
+          </div>
+          <div className="read-site-label" style={{marginTop:12}}>Also Available</div>
+          <div className="redirect-site-btns">
+            {READ_SITES.filter(s => !s.free).map(s => (
+              <a key={s.name} href={s.getUrl(m)} target="_blank" rel="noopener noreferrer"
+                className={`redirect-site-btn ${s.color}`}>{s.name} ↗</a>
+            ))}
+          </div>
         </div>
         <div className="redirect-bar-wrap"><div className="redirect-bar" /></div>
         <button className="redirect-cancel" onClick={onCancel}>✕ Cancel</button>
@@ -292,6 +307,7 @@ export default function App() {
         </div>
       </nav>
 
+      <div className="content-wrap">
       <main className="main">
         <div className="search-wrap">
           <div className="search-box">
@@ -478,6 +494,16 @@ export default function App() {
             onBm={toggleBookmark} bm={isBm(selected)} onRead={setRedirect} />
         )}
       </main>
+      <Footer />
+      </div>
+      <MobileNav
+        page={page}
+        navigate={navigate}
+        bookmarks={bookmarks}
+        history={history}
+        onRandom={loadRandom}
+        randomLoading={randomLoading}
+      />
     </div>
   )
 }
@@ -569,7 +595,14 @@ function DetailView({ m, onClose, onBm, bm, onRead }) {
             <div style={{fontFamily:'var(--font-comic)',fontSize:13,letterSpacing:2,
               color:'var(--cyan)',marginBottom:10}}>📖 READ ON:</div>
             <div className="redirect-site-btns" style={{justifyContent:'flex-start'}}>
-              {READ_SITES.map(s => (
+              {READ_SITES.filter(s => s.free).map(s => (
+                <div key={s.name} className="redirect-site-btn-wrap" style={{display:'inline-block'}}>
+                  <div className="free-badge">FREE</div>
+                  <a href={s.getUrl(m)} target="_blank" rel="noopener noreferrer"
+                    className={`redirect-site-btn ${s.color}`}>{s.name} ↗</a>
+                </div>
+              ))}
+              {READ_SITES.filter(s => !s.free).map(s => (
                 <a key={s.name} href={s.getUrl(m)} target="_blank" rel="noopener noreferrer"
                   className={`redirect-site-btn ${s.color}`}>{s.name} ↗</a>
               ))}
@@ -594,5 +627,78 @@ function SkeletonGrid() {
         <div key={i} className="skeleton" style={{height:280}} />
       ))}
     </div>
+  )
+}
+
+/* ── Mobile Nav ── */
+function MobileNav({ page, navigate, bookmarks, history, onRandom, randomLoading }) {
+  const items = [
+    { id: 'home',      icon: '⛩',  label: 'Home'    },
+    { id: 'popular',   icon: '🔥',  label: 'Popular' },
+    { id: 'genres',    icon: '⚡',  label: 'Genres'  },
+    { id: 'history',   icon: '📜',  label: 'History' },
+    { id: 'bookmarks', icon: '📌',  label: 'Saves'   },
+  ]
+  return (
+    <nav className="mobile-nav">
+      <div className="mobile-nav-inner">
+        {items.map(n => (
+          <button key={n.id} className={`mobile-nav-btn${page === n.id ? ' active' : ''}`}
+            onClick={() => navigate(n.id)}>
+            <span className="nav-icon">{n.icon}</span>
+            <span>{n.label}</span>
+            {n.id === 'bookmarks' && bookmarks.length > 0 && (
+              <span className="mobile-nav-badge">{bookmarks.length}</span>
+            )}
+            {n.id === 'history' && history.length > 0 && (
+              <span className="mobile-nav-badge" style={{background:'var(--cyan)',color:'#000'}}>{history.length}</span>
+            )}
+          </button>
+        ))}
+        <button className="mobile-random-btn" onClick={onRandom} disabled={randomLoading}>
+          <span style={{fontSize:20}}>🎲</span>
+          <span>{randomLoading ? '...' : 'Random'}</span>
+        </button>
+      </div>
+    </nav>
+  )
+}
+
+/* ── Footer ── */
+function Footer() {
+  return (
+    <footer className="site-footer">
+      <div className="footer-kanji-bg">鬼兄</div>
+      <div className="footer-inner">
+        <div className="footer-brand">
+          <div className="footer-logo-kanji">鬼兄</div>
+          <div className="footer-logo-name">ONICHAN</div>
+          <div className="footer-logo-sub">SQUAD</div>
+          <p className="footer-tagline">Your ultimate manga destination. Browse, discover, read free.</p>
+        </div>
+        <div className="footer-col">
+          <h4>📖 Read Free</h4>
+          <div className="footer-links">
+            <a href="https://weebcentral.com" target="_blank" rel="noopener noreferrer" className="footer-link">⭐ WeebCentral</a>
+            <a href="https://mangakatana.com" target="_blank" rel="noopener noreferrer" className="footer-link">⭐ MangaKatana</a>
+            <a href="https://mangadex.org" target="_blank" rel="noopener noreferrer" className="footer-link">✦ MangaDex</a>
+            <a href="https://mangareader.to" target="_blank" rel="noopener noreferrer" className="footer-link">✦ MangaReader</a>
+            <a href="https://comick.io" target="_blank" rel="noopener noreferrer" className="footer-link">✦ ComicK</a>
+          </div>
+        </div>
+        <div className="footer-col">
+          <h4>📊 Databases</h4>
+          <div className="footer-links">
+            <a href="https://myanimelist.net" target="_blank" rel="noopener noreferrer" className="footer-link">MyAnimeList</a>
+            <a href="https://anilist.co" target="_blank" rel="noopener noreferrer" className="footer-link">AniList</a>
+            <a href="https://jikan.moe" target="_blank" rel="noopener noreferrer" className="footer-link">Jikan API</a>
+          </div>
+        </div>
+      </div>
+      <div className="footer-bottom">
+        <span className="footer-copy">© 2025 OniChan Squad · MIT License</span>
+        <span className="footer-credit">// crafted by spac3gh0st</span>
+      </div>
+    </footer>
   )
 }
