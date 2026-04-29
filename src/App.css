@@ -215,7 +215,6 @@ img { display: block; }
 /* ── MAIN ── */
 .main {
   flex: 1;
-  overflow: auto;
   padding: 24px 28px;
   position: relative;
   animation: slideIn 0.3s ease;
@@ -1073,5 +1072,15 @@ img { display: block; }
     min-width: 72vw !important;
     max-width: 300px !important;
     flex-shrink: 0 !important;
+  }
+}
+
+/* ── SCROLL FIX ── */
+@media (max-width: 900px) {
+  .main { overflow: visible !important; }
+  .scroll-row {
+    overflow-x: scroll !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 }
