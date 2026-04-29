@@ -215,6 +215,7 @@ img { display: block; }
 /* ── MAIN ── */
 .main {
   flex: 1;
+  min-width: 0; /* ← FIX: prevents flex item from overflowing and breaking scroll */
   padding: 24px 28px;
   position: relative;
   animation: slideIn 0.3s ease;
@@ -911,7 +912,8 @@ img { display: block; }
 /* ══════════════════════════════════════════════
    FOOTER
    ══════════════════════════════════════════════ */
-.content-wrap { display: flex; flex-direction: column; flex: 1; }
+/* ← FIX: added min-width: 0 so this flex child can be constrained by .app-shell */
+.content-wrap { display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .site-footer { background: var(--ink2); border-top: var(--stroke); padding: 40px 48px 28px; position: relative; overflow: hidden; margin-top: auto; }
 .footer-kanji-bg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-comic); font-size: 220px; color: rgba(180,80,255,0.03); pointer-events: none; user-select: none; }
 .footer-inner { position: relative; z-index: 1; display: flex; gap: 48px; flex-wrap: wrap; justify-content: space-between; }
@@ -1037,7 +1039,6 @@ img { display: block; }
 
 /* ── SCROLL OUTER WRAPPER ── */
 .scroll-outer {
-  /* Block element that establishes its own scroll context */
   display: block;
   width: 100%;
   position: relative;
@@ -1045,19 +1046,16 @@ img { display: block; }
 
 @media (max-width: 900px) {
   .scroll-outer {
-    /* Extend beyond main padding to go edge to edge */
     margin-left: -14px;
     margin-right: -14px;
     width: calc(100% + 28px);
   }
   .scroll-outer .scroll-row {
-    /* Reset margins since outer handles the edge bleed */
     margin-left: 0 !important;
     margin-right: 0 !important;
     width: 100% !important;
     padding-left: 14px !important;
     padding-right: 30px !important;
-    /* Pure block scrollable container */
     display: flex !important;
     flex-wrap: nowrap !important;
     overflow-x: scroll !important;
