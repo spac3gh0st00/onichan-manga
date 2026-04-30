@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { createPortal } from 'react-dom'
 
 const JIKAN   = 'https://api.jikan.moe/v4'
 const ANILIST = 'https://graphql.anilist.co'
@@ -92,7 +91,7 @@ function RedirectPage({ m, onCancel }) {
     return () => clearTimeout(t)
   }, [m, onCancel])
 
-  return createPortal(
+  return (
     <div className="redirect-page">
       <div className="redirect-bg" />
       {cover && <div className="redirect-bg-cover" style={{backgroundImage:`url(${cover})`}} />}
@@ -128,8 +127,7 @@ function RedirectPage({ m, onCancel }) {
         <div className="redirect-bar-wrap"><div className="redirect-bar" /></div>
         <button className="redirect-cancel" onClick={onCancel}>✕ Cancel</button>
       </div>
-    </div>,
-    document.body
+    </div>
   )
 }
 
@@ -310,195 +308,194 @@ export default function App() {
       </nav>
 
       <div className="content-wrap">
-        <main className="main">
-          <div className="search-wrap">
-            <div className="search-box">
-              <span className="search-icon">⌕</span>
-              <input className="search-input" placeholder="Type a manga title..."
-                value={search} onChange={e => handleSearch(e.target.value)} />
-              {searching && <span className="search-spinner">◌</span>}
-            </div>
-            {search && (
-              <div className="search-dropdown">
-                {searchRes.length === 0 && !searching
-                  ? <div className="search-empty">No results for "{search}"</div>
-                  : searchRes.map((m, i) => (
-                      <div key={m.mal_id || m.al_id || i} className="search-result"
-                        onClick={() => { openManga(m); setSearch(''); setSearchRes([]) }}>
-                        {jCover(m) && <img src={jCover(m)} className="search-thumb" alt="" />}
-                        <div>
-                          <div className="search-name">{jTitle(m)}</div>
-                          <div className="search-tags">{jTags(m).slice(0,3).join(' · ')}</div>
-                        </div>
+      <main className="main">
+        <div className="search-wrap">
+          <div className="search-box">
+            <span className="search-icon">⌕</span>
+            <input className="search-input" placeholder="Type a manga title..."
+              value={search} onChange={e => handleSearch(e.target.value)} />
+            {searching && <span className="search-spinner">◌</span>}
+          </div>
+          {search && (
+            <div className="search-dropdown">
+              {searchRes.length === 0 && !searching
+                ? <div className="search-empty">No results for "{search}"</div>
+                : searchRes.map((m, i) => (
+                    <div key={m.mal_id || m.al_id || i} className="search-result"
+                      onClick={() => { openManga(m); setSearch(''); setSearchRes([]) }}>
+                      {jCover(m) && <img src={jCover(m)} className="search-thumb" alt="" />}
+                      <div>
+                        <div className="search-name">{jTitle(m)}</div>
+                        <div className="search-tags">{jTags(m).slice(0,3).join(' · ')}</div>
                       </div>
-                    ))
-                }
+                    </div>
+                  ))
+              }
+            </div>
+          )}
+        </div>
+
+        {error && (
+          <div className="empty-state">
+            <span className="empty-icon">⚠️</span>{error}<br />
+            <button className="btn-primary" style={{marginTop:16}} onClick={loadHome}>Retry</button>
+          </div>
+        )}
+
+        {/* HOME */}
+        {page === 'home' && !selected && !error && (
+          <>
+            {loading && <div className="skeleton" style={{height:420,marginBottom:44}} />}
+            {hero && !loading && (
+              <div className="hero">
+                {jCover(hero) && <img src={jCover(hero)} className="hero-bg" alt="" />}
+                <div className="hero-halftone" />
+                <div className="hero-gradient" />
+                <div className="hero-content">
+                  <div className="hero-eyebrow">✦ FEATURED ✦</div>
+                  <h1 className="hero-title">{jTitle(hero)}</h1>
+                  <p className="hero-desc">{jDesc(hero).slice(0,200)}…</p>
+                  <div className="hero-tags">
+                    {jTags(hero).slice(0,5).map(t => <span key={t} className="tag">{t}</span>)}
+                  </div>
+                  <div className="hero-actions">
+                    <button className="btn-primary" onClick={() => openManga(hero)}>📖 View Details</button>
+                    <button className="btn-secondary" onClick={() => setRedirect(hero)}>🚀 Read Free</button>
+                  </div>
+                </div>
+                {jCover(hero) && (
+                  <div className="hero-cover-panel">
+                    <img src={jCover(hero)} className="hero-cover-img" alt="" />
+                  </div>
+                )}
+                <div className="hero-dots">
+                  {featured.map((_, i) => (
+                    <div key={i} className={`hero-dot${i === heroIdx ? ' active' : ''}`}
+                      onClick={() => setHeroIdx(i)} />
+                  ))}
+                </div>
               </div>
             )}
-          </div>
 
-          {error && (
-            <div className="empty-state">
-              <span className="empty-icon">⚠️</span>{error}<br />
-              <button className="btn-primary" style={{marginTop:16}} onClick={loadHome}>Retry</button>
-            </div>
-          )}
+            <SectionRow title="🔥 Popular Now" onMore={() => navigate('popular')} loading={loading}>
+              {popular.slice(0,8).map((m,i) => (
+                <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={openManga} onRead={setRedirect} onBm={toggleBookmark} bm={isBm(m)} />
+              ))}
+            </SectionRow>
 
-          {/* HOME */}
-          {page === 'home' && !selected && !error && (
-            <>
-              {loading && <div className="skeleton" style={{height:420,marginBottom:44}} />}
-              {hero && !loading && (
-                <div className="hero">
-                  {jCover(hero) && <img src={jCover(hero)} className="hero-bg" alt="" />}
-                  <div className="hero-halftone" />
-                  <div className="hero-gradient" />
-                  <div className="hero-content">
-                    <div className="hero-eyebrow">✦ FEATURED ✦</div>
-                    <h1 className="hero-title">{jTitle(hero)}</h1>
-                    <p className="hero-desc">{jDesc(hero).slice(0,200)}…</p>
-                    <div className="hero-tags">
-                      {jTags(hero).slice(0,5).map(t => <span key={t} className="tag">{t}</span>)}
-                    </div>
-                    <div className="hero-actions">
-                      <button className="btn-primary" onClick={() => openManga(hero)}>📖 View Details</button>
-                      <button className="btn-secondary" onClick={() => setRedirect(hero)}>🚀 Read Free</button>
-                    </div>
-                  </div>
-                  {jCover(hero) && (
-                    <div className="hero-cover-panel">
-                      <img src={jCover(hero)} className="hero-cover-img" alt="" />
-                    </div>
-                  )}
-                  <div className="hero-dots">
-                    {featured.map((_, i) => (
-                      <div key={i} className={`hero-dot${i === heroIdx ? ' active' : ''}`}
-                        onClick={() => setHeroIdx(i)} />
-                    ))}
-                  </div>
-                </div>
-              )}
+            <SectionRow title="✦ New Releases" onMore={() => navigate('new')} loading={loading}>
+              {newest.slice(0,8).map((m,i) => (
+                <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={openManga} onRead={setRedirect} onBm={toggleBookmark} bm={isBm(m)} />
+              ))}
+            </SectionRow>
 
-              <SectionRow title="🔥 Popular Now" onMore={() => navigate('popular')} loading={loading}>
-                {popular.slice(0,8).map((m,i) => (
-                  <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={openManga} onRead={setRedirect} onBm={toggleBookmark} bm={isBm(m)} />
-                ))}
-              </SectionRow>
-
-              <SectionRow title="✦ New Releases" onMore={() => navigate('new')} loading={loading}>
-                {newest.slice(0,8).map((m,i) => (
-                  <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={openManga} onRead={setRedirect} onBm={toggleBookmark} bm={isBm(m)} />
-                ))}
-              </SectionRow>
-
-              <div className="section-box">
-                <div className="section-header">
-                  <span className="section-title">⚡ Browse by Genre</span>
-                  <button className="btn-more" onClick={() => navigate('genres')}>All Genres →</button>
-                </div>
-                <div className="genre-grid">
-                  {GENRES.map(g => (
-                    <button key={g} className="genre-chip"
-                      onClick={() => { navigate('genres'); loadGenre(g) }}>{g}</button>
-                  ))}
-                </div>
+            <div className="section-box">
+              <div className="section-header">
+                <span className="section-title">⚡ Browse by Genre</span>
+                <button className="btn-more" onClick={() => navigate('genres')}>All Genres →</button>
               </div>
-            </>
-          )}
-
-          {/* POPULAR / NEW */}
-          {(page === 'popular' || page === 'new') && !selected && (
-            <>
-              <h2 className="page-title">{page === 'popular' ? '🔥 Popular Manga' : '✦ New Releases'}</h2>
-              {loading ? <SkeletonGrid /> : (
-                <div className="manga-grid">
-                  {pageData.map((m,i) => (
-                    <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={openManga} onRead={setRedirect} onBm={toggleBookmark} bm={isBm(m)} />
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-
-          {/* GENRES */}
-          {page === 'genres' && !selected && (
-            <>
-              <h2 className="page-title">⚡ Browse Genres</h2>
-              <div className="genre-grid" style={{marginBottom:28}}>
+              <div className="genre-grid">
                 {GENRES.map(g => (
-                  <button key={g} className={`genre-chip${activeGenre === g ? ' active' : ''}`}
-                    onClick={() => loadGenre(g)}>{g}</button>
+                  <button key={g} className="genre-chip"
+                    onClick={() => { navigate('genres'); loadGenre(g) }}>{g}</button>
                 ))}
               </div>
-              {genreLoading && <SkeletonGrid />}
-              {!genreLoading && genreData.length > 0 && (
-                <div className="manga-grid">
-                  {genreData.map((m,i) => (
-                    <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={openManga} onRead={setRedirect} onBm={toggleBookmark} bm={isBm(m)} />
+            </div>
+          </>
+        )}
+
+        {/* POPULAR / NEW */}
+        {(page === 'popular' || page === 'new') && !selected && (
+          <>
+            <h2 className="page-title">{page === 'popular' ? '🔥 Popular Manga' : '✦ New Releases'}</h2>
+            {loading ? <SkeletonGrid /> : (
+              <div className="manga-grid">
+                {pageData.map((m,i) => (
+                  <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={openManga} onRead={setRedirect} onBm={toggleBookmark} bm={isBm(m)} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* GENRES */}
+        {page === 'genres' && !selected && (
+          <>
+            <h2 className="page-title">⚡ Browse Genres</h2>
+            <div className="genre-grid" style={{marginBottom:28}}>
+              {GENRES.map(g => (
+                <button key={g} className={`genre-chip${activeGenre === g ? ' active' : ''}`}
+                  onClick={() => loadGenre(g)}>{g}</button>
+              ))}
+            </div>
+            {genreLoading && <SkeletonGrid />}
+            {!genreLoading && genreData.length > 0 && (
+              <div className="manga-grid">
+                {genreData.map((m,i) => (
+                  <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={openManga} onRead={setRedirect} onBm={toggleBookmark} bm={isBm(m)} />
+                ))}
+              </div>
+            )}
+            {!activeGenre && (
+              <div className="empty-state">
+                <span className="empty-icon">⚡</span>Select a genre to explore
+              </div>
+            )}
+          </>
+        )}
+
+        {/* HISTORY */}
+        {page === 'history' && !selected && (
+          <>
+            <h2 className="page-title">📜 Reading History</h2>
+            {history.length === 0
+              ? <div className="history-empty">
+                  <span className="empty-icon">📜</span>No history yet — start reading!
+                </div>
+              : <>
+                  <button className="history-clear-btn" onClick={() => setHistory([])}>
+                    🗑 Clear History
+                  </button>
+                  {history.map((m, i) => (
+                    <div key={m.mal_id||m.al_id||i} className="history-item" onClick={() => openManga(m)}>
+                      {jCover(m) && <img src={jCover(m)} className="history-thumb" alt="" />}
+                      <div className="history-info">
+                        <div className="history-title">{jTitle(m)}</div>
+                        <div className="history-meta">{jTags(m).slice(0,3).join(' · ')}</div>
+                      </div>
+                      <div className="history-time">{timeAgo(m._visitedAt)}</div>
+                    </div>
+                  ))}
+                </>
+            }
+          </>
+        )}
+
+        {/* BOOKMARKS */}
+        {page === 'bookmarks' && !selected && (
+          <>
+            <h2 className="page-title">📌 Bookmarks</h2>
+            {bookmarks.length === 0
+              ? <div className="empty-state">
+                  <span className="empty-icon">📚</span>No bookmarks yet — go find something epic!
+                </div>
+              : <div className="manga-grid">
+                  {bookmarks.map((m,i) => (
+                    <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={openManga} onRead={setRedirect} onBm={toggleBookmark} bm={true} />
                   ))}
                 </div>
-              )}
-              {!activeGenre && (
-                <div className="empty-state">
-                  <span className="empty-icon">⚡</span>Select a genre to explore
-                </div>
-              )}
-            </>
-          )}
+            }
+          </>
+        )}
 
-          {/* HISTORY */}
-          {page === 'history' && !selected && (
-            <>
-              <h2 className="page-title">📜 Reading History</h2>
-              {history.length === 0
-                ? <div className="history-empty">
-                    <span className="empty-icon">📜</span>No history yet — start reading!
-                  </div>
-                : <>
-                    <button className="history-clear-btn" onClick={() => setHistory([])}>
-                      🗑 Clear History
-                    </button>
-                    {history.map((m, i) => (
-                      <div key={m.mal_id||m.al_id||i} className="history-item" onClick={() => openManga(m)}>
-                        {jCover(m) && <img src={jCover(m)} className="history-thumb" alt="" />}
-                        <div className="history-info">
-                          <div className="history-title">{jTitle(m)}</div>
-                          <div className="history-meta">{jTags(m).slice(0,3).join(' · ')}</div>
-                        </div>
-                        <div className="history-time">{timeAgo(m._visitedAt)}</div>
-                      </div>
-                    ))}
-                  </>
-              }
-            </>
-          )}
-
-          {/* BOOKMARKS */}
-          {page === 'bookmarks' && !selected && (
-            <>
-              <h2 className="page-title">📌 Bookmarks</h2>
-              {bookmarks.length === 0
-                ? <div className="empty-state">
-                    <span className="empty-icon">📚</span>No bookmarks yet — go find something epic!
-                  </div>
-                : <div className="manga-grid">
-                    {bookmarks.map((m,i) => (
-                      <MangaCard key={m.mal_id||m.al_id||i} m={m} onOpen={openManga} onRead={setRedirect} onBm={toggleBookmark} bm={true} />
-                    ))}
-                  </div>
-              }
-            </>
-          )}
-
-          {/* DETAIL */}
-          {selected && (
-            <DetailView m={selected} onClose={() => setSelected(null)}
-              onBm={toggleBookmark} bm={isBm(selected)} onRead={setRedirect} />
-          )}
-        </main>
-        <Footer />
+        {/* DETAIL */}
+        {selected && (
+          <DetailView m={selected} onClose={() => setSelected(null)}
+            onBm={toggleBookmark} bm={isBm(selected)} onRead={setRedirect} />
+        )}
+      </main>
+      <Footer />
       </div>
-
       <MobileNav
         page={page}
         navigate={navigate}
@@ -652,8 +649,10 @@ function MobileNav({ page, navigate, bookmarks, history, onRandom, randomLoading
   const handleRandom = () => { onRandom(); setOpen(false) }
   return (
     <>
+      {/* Backdrop */}
       <div className={`fnav-backdrop${open ? ' visible' : ''}`} onClick={() => setOpen(false)} />
       <div className="fnav-wrap">
+        {/* Expanded menu */}
         {open && (
           <div className="fnav-menu">
             {items.map(n => (
@@ -676,6 +675,7 @@ function MobileNav({ page, navigate, bookmarks, history, onRandom, randomLoading
             </button>
           </div>
         )}
+        {/* FAB trigger */}
         <button className={`fnav-fab${open ? ' open' : ''}`} onClick={() => setOpen(o => !o)}>
           {open ? '✕' : '鬼'}
         </button>
